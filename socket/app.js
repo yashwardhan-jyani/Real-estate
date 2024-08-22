@@ -1,8 +1,20 @@
 import { Server } from "socket.io";
+import http from "http";
+import express from "express";
 
-const io = new Server({
+const app = express();
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  // cors: {
+  //   origin: "http://localhost:5173",
+  //   methods: ["GET", "POST", "PUT", "DELETE"],
+  // },
   cors: {
     origin: "http://localhost:5173",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true
   },
 });
 
@@ -28,8 +40,8 @@ io.on("connection", (socket) => {
     addUser(userId, socket.id);
   });
 
-  socket.on("sendMessage", ({ receiverId, data }) => {
-    const receiver = getUser(receiverId);
+  socket.on("sendMessage", async ({ receiverId, data }) => {
+    const receiver = await getUser(receiverId);
     io.to(receiver.socketId).emit("getMessage", data);
   });
 
@@ -38,4 +50,4 @@ io.on("connection", (socket) => {
   });
 });
 
-io.listen("4000");
+export { app, io, server }
